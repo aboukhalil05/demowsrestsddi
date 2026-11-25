@@ -1,0 +1,194 @@
+### ====================================================================
+### 1. TESTS DES FILIÈRES (CRUD)
+### ====================================================================
+
+### 1.1 Afficher toutes les filières
+# Vérifie que les filières initiales (SDDI, GI) sont bien retournées en JSON
+GET http://localhost:8095/filieres
+
+### 1.2 Afficher une seule filière par son ID
+# Teste la récupération via PathVariable (ID = 1 -> SDDI)
+GET http://localhost:8095/filieres/1
+
+### 1.3 Ajouter une nouvelle filière
+# Teste PostMapping et RequestBody (crée généralement l'ID 3)
+POST http://localhost:8095/filieres
+Content-Type: application/json
+
+{
+  "codeFiliere": "IA",
+  "nomFiliere": "Intelligence Artificielle"
+}
+
+### 1.4 Modifier la filière créée (adaptez l'ID si besoin)
+# Teste PutMapping pour mettre à jour le code et le nom de la filière 3
+PUT http://localhost:8095/filieres/3
+Content-Type: application/json
+
+{
+  "codeFiliere": "IA-DS",
+  "nomFiliere": "Intelligence Artificielle et Data Science"
+}
+
+### 1.5 Supprimer la filière de test (ID 3)
+# Teste DeleteMapping sur une filière sans étudiants (pas de conflit de clé étrangère)
+DELETE http://localhost:8095/filieres/3
+
+
+### ====================================================================
+### 2. TESTS DES ÉTUDIANTS (CRUD + RECHERCHES)
+### ====================================================================
+
+### 2.1 Afficher tous les étudiants
+# Retourne tous les étudiants avec leur objet Filiere imbriqué
+GET http://localhost:8095/students
+
+### 2.2 Afficher un étudiant par ID
+# Retourne uniquement l'étudiant n°1
+GET http://localhost:8095/students/1
+
+### 2.3 Rechercher un étudiant par prénom
+# Teste la méthode personnalisée findByFirstNameStudent via RequestParam
+GET http://localhost:8095/students/search?fn=Ikram
+
+### 2.4 Filtrer les étudiants par filière
+# Teste la relation ManyToOne : retourne uniquement les étudiants de la filière 1 (SDDI)
+GET http://localhost:8095/students/filiere/1
+
+### 2.5 Ajouter un nouvel étudiant dans la filière 1
+# Crée un nouvel étudiant (généralement ID 4) rattaché à la filière ID 1
+POST http://localhost:8095/students
+Content-Type: application/json
+
+{
+  "firstNameStudent": "Karim",
+  "lastNameStudent": "Mansouri",
+  "emailStudent": "karim@estem.ma",
+  "filiere": {
+    "idFiliere": 1
+  }
+}
+
+### 2.6 Modifier l'étudiant créé (changement d'email et de filière)
+# Passe l'étudiant 4 de la filière 1 vers la filière 2
+PUT http://localhost:8095/students/4
+Content-Type: application/json
+
+{
+  "firstNameStudent": "Karim",
+  "lastNameStudent": "Mansouri",
+  "emailStudent": "k.mansouri@estem.ma",
+  "filiere": {
+    "idFiliere": 2
+  }
+}
+
+### 2.7 Supprimer l'étudiant de test (ID 4)
+# Supprime l'étudiant créé pendant la démo
+DELETE http://localhost:8095/students/4
+
+
+### ====================================================================
+### 3. TESTS DES PROFESSEURS
+### ====================================================================
+
+### 3.1 Afficher tous les professeurs
+# Retourne la liste des professeurs enregistrés
+GET http://localhost:8095/professeurs
+
+### 3.2 Ajouter un nouveau professeur
+# Crée un professeur (généralement ID 3)
+POST http://localhost:8095/professeurs
+Content-Type: application/json
+
+{
+  "nomProfesseur": "Pr. El Amrani",
+  "specialite": "Architecture Microservices"
+}
+
+### 3.3 Supprimer le professeur de test (ID 3)
+# Supprime le professeur créé ci-dessus
+DELETE http://localhost:8095/professeurs/3
+
+
+### ====================================================================
+### 4. TESTS DES MODULES
+### ====================================================================
+
+### 4.1 Afficher tous les modules
+# Retourne les modules avec leur filière, leur professeur et leur coefficient
+GET http://localhost:8095/modules
+
+### 4.2 Afficher les modules d'une filière spécifique (ID 1)
+# Filtre les modules rattachés à la filière SDDI
+GET http://localhost:8095/modules/filiere/1
+
+### 4.3 Ajouter un nouveau module
+# Relie ce module à la filière 1 et au professeur 1 (crée généralement ID 3)
+POST http://localhost:8095/modules
+Content-Type: application/json
+
+{
+  "nomModule": "Cloud Computing",
+  "coefficient": 2.5,
+  "filiere": {
+    "idFiliere": 1
+  },
+  "professeur": {
+    "idProfesseur": 1
+  }
+}
+
+### 4.4 Supprimer le module de test (ID 3)
+# Supprime le module créé ci-dessus
+DELETE http://localhost:8095/modules/3
+
+
+### ====================================================================
+### 5. TESTS DES NOTES
+### ====================================================================
+
+### 5.1 Afficher toutes les notes
+# Retourne toutes les notes avec l'étudiant et le module associés
+GET http://localhost:8095/notes
+
+### 5.2 Afficher les notes d'un étudiant spécifique (ID 1)
+# Retourne le relevé de notes détaillé de l'étudiant 1 (Ikram)
+GET http://localhost:8095/notes/student/1
+
+### 5.3 Ajouter une nouvelle note
+# Attribue 17.5/20 à l'étudiant 3 (Malika) dans le module 1 (format date: AAAA-MM-JJ)
+POST http://localhost:8095/notes
+Content-Type: application/json
+
+{
+  "valeur": 17.5,
+  "dateExamen": "2026-11-25",
+  "student": {
+    "idStudent": 3
+  },
+  "module": {
+    "idModule": 1
+  }
+}
+
+### 5.4 Supprimer la note de test (ID 5)
+# Supprime la note ajoutée pendant la démo
+DELETE http://localhost:8095/notes/5
+
+
+### ====================================================================
+### 6. TESTS DES FONCTIONNALITÉS MÉTIER (MOYENNE, CLASSEMENT, STATS)
+### ====================================================================
+
+### 6.1 Calculer la moyenne pondérée d'un étudiant (ID 1)
+# Calcule somme(note * coef) / somme(coef) et indique si l'étudiant est Admis ou Ajourné
+GET http://localhost:8095/students/1/moyenne
+
+### 6.2 Afficher le classement des étudiants de la filière 1
+# Trie les étudiants de la filière SDDI de la meilleure moyenne à la moins bonne avec leur rang
+GET http://localhost:8095/filieres/1/classement
+
+### 6.3 Afficher les statistiques globales de l'école
+# Retourne le total d'étudiants, le nombre d'admis, le taux de réussite (%) et la moyenne générale
+GET http://localhost:8095/students/stats
